@@ -1,17 +1,27 @@
-# 1. Базовый легковесный образ Python
-FROM python:3.10-slim
+# Используем легковесный образ Python
+FROM python:3.11-slim
 
-# 2. Устанавливаем рабочую папку внутри контейнера
+# Устанавливаем рабочую директорию внутри контейнера
 WORKDIR /app
 
-# 3. Копируем файл зависимостей именно этого сервиса
-COPY requirements.txt .
+# Устанавливаем системные зависимости для psycopg2 (работы с PostgreSQL)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# 4. Устанавливаем библиотеки без сохранения кэша (для уменьшения размера образа)
+# Копируем файл зависимостей и устанавливаем их
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 5. Копируем весь остальной код сервиса в контейнер
+# Копируем весь код сервиса в контейнер
 COPY . .
 
-# 6. Команда для запуска FastAPI через uvicorn
+# Создаем папку для логов, чтобы Docker не ругался при записи
+RUN mkdir -p logs
+
+# Открываем порт, который слушает FastAPI
+EXPOSE 8000
+
+# Команда для запуска приложения через uvicorn
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

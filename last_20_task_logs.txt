@@ -1,0 +1,20 @@
+                 └ <function get_async_backend at 0x78bf7acceca0>
+  File "/usr/local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 2641, in run_sync_in_worker_thread
+    return await future
+                 └ <Future finished exception=AttributeError("'TaskCreate' object has no attribute 'user_id'")>
+  File "/usr/local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1033, in run
+    result = context.run(func, *args)
+
+  File "/app/main.py", line 22, in create_task
+    user_id=task_data.user_id  # Логическая связь с пользователем из auth_service
+            └ TaskCreate(title='Купить молоко', description='Срочно')
+
+  File "/usr/local/lib/python3.11/site-packages/pydantic/main.py", line 811, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+
+AttributeError: 'TaskCreate' object has no attribute 'user_id'
+2026-07-29 17:41:41 | INFO     | Запрос: GET / | IP: 172.21.0.1
+2026-07-29 17:41:41 | WARNING  | Ответ: GET / | Статус: 404 | Время: 6.03ms
+2026-07-29 18:19:08 | INFO     | Запрос: POST /tasks | IP: 172.21.0.1
+2026-07-29 18:19:08 | INFO     | 📋 Создана новая задача: ID #1 для пользователя ID #77
+2026-07-29 18:19:08 | SUCCESS  | Ответ: POST /tasks | Статус: 201 | Время: 178.43ms

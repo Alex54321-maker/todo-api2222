@@ -1,0 +1,21 @@
+2026-07-27 14:32:31.735 | INFO     | middleware.logging_middleware:dispatch:14 - 🔐 [AUTH IN] GET /internal/users/999 | IP: 127.0.0.1
+2026-07-27 14:32:31.756 | WARNING  | main:check_user_exists:52 - 🔍 Внутренний запрос: Пользователь ID #999 не найден в базе данных
+2026-07-27 14:32:31.759 | WARNING  | middleware.logging_middleware:dispatch:24 - 🔐 [AUTH OUT] GET /internal/users/999 | Статус: 404 | Время: 23.85ms
+2026-07-27 14:36:59.779 | INFO     | middleware.logging_middleware:dispatch:14 - 🔐 [AUTH IN] GET /internal/users/999 | IP: 127.0.0.1
+2026-07-27 14:36:59.785 | WARNING  | main:check_user_exists:52 - 🔍 Внутренний запрос: Пользователь ID #999 не найден в базе данных
+2026-07-27 14:36:59.790 | WARNING  | middleware.logging_middleware:dispatch:24 - 🔐 [AUTH OUT] GET /internal/users/999 | Статус: 404 | Время: 10.38ms
+2026-07-28 08:50:05.956 | INFO     | middleware.logging_middleware:dispatch:14 - 🔐 [AUTH IN] GET /internal/users/99999 | IP: 127.0.0.1
+2026-07-28 08:50:05.977 | WARNING  | main:check_user_exists:52 - 🔍 Внутренний запрос: Пользователь ID #99999 не найден в базе данных
+2026-07-28 08:50:05.980 | WARNING  | middleware.logging_middleware:dispatch:24 - 🔐 [AUTH OUT] GET /internal/users/99999 | Статус: 404 | Время: 24.16ms
+2026-07-28 09:02:15.813 | INFO     | middleware.logging_middleware:dispatch:14 - 🔐 [AUTH IN] GET /internal/users/99999 | IP: 127.0.0.1
+2026-07-28 09:02:15.828 | WARNING  | main:check_user_exists:52 - 🔍 Внутренний запрос: Пользователь ID #99999 не найден в базе данных
+2026-07-28 09:02:15.831 | WARNING  | middleware.logging_middleware:dispatch:24 - 🔐 [AUTH OUT] GET /internal/users/99999 | Статус: 404 | Время: 17.97ms
+2026-07-28 09:13:01.457 | INFO     | middleware.logging_middleware:dispatch:14 - 🔐 [AUTH IN] GET /internal/users/99999 | IP: 127.0.0.1
+2026-07-28 09:13:01.471 | WARNING  | main:check_user_exists:52 - 🔍 Внутренний запрос: Пользователь ID #99999 не найден в базе данных
+2026-07-28 09:13:01.475 | WARNING  | middleware.logging_middleware:dispatch:24 - 🔐 [AUTH OUT] GET /internal/users/99999 | Статус: 404 | Время: 18.05ms
+2026-07-28 09:13:01.486 | INFO     | middleware.logging_middleware:dispatch:14 - 🔐 [AUTH IN] POST /register | IP: 127.0.0.1
+2026-07-28 09:13:01.962 | INFO     | main:register:33 - 🆕 Создан новый пользователь: ID #1 (test_success@example.com)
+2026-07-28 09:13:01.966 | SUCCESS  | middleware.logging_middleware:dispatch:26 - 🔐 [AUTH OUT] POST /register | Статус: 201 | Время: 480.03ms
+2026-07-28 09:13:01.969 | INFO     | middleware.logging_middleware:dispatch:14 - 🔐 [AUTH IN] POST /login | IP: 127.0.0.1
+2026-07-28 09:13:02.315 | INFO     | main:login:45 - 🔑 Успешный вход в систему: ID #1 (test_success@example.com) -> Выдан JWT-токен
+2026-07-28 09:13:02.319 | SUCCESS  | middleware.logging_middleware:dispatch:26 - 🔐 [AUTH OUT] POST /login | Статус: 200 | Время: 349.59ms

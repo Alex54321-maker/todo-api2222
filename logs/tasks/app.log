@@ -1,0 +1,303 @@
+2026-07-29 09:36:14 | INFO     | Запрос: POST /tasks | IP: 172.21.0.1
+2026-07-29 09:36:14 | ERROR    | Ошибка: POST /tasks | Сбой: 'TaskCreate' object has no attribute 'user_id' | Время: 9.79ms
+Traceback (most recent call last):
+
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 159, in call_next
+    message = await recv_stream.receive()
+                    │           └ <function MemoryObjectReceiveStream.receive at 0x78bf7abebec0>
+                    └ MemoryObjectReceiveStream(_state=_MemoryObjectStreamState(max_buffer_size=0, buffer=deque([]), open_send_channels=0, open_rec...
+  File "/usr/local/lib/python3.11/site-packages/anyio/streams/memory.py", line 133, in receive
+    raise EndOfStream from None
+          └ <class 'anyio.EndOfStream'>
+
+anyio.EndOfStream
+
+
+During handling of the above exception, another exception occurred:
+
+
+Traceback (most recent call last):
+
+  File "/usr/local/bin/uvicorn", line 6, in <module>
+    sys.exit(main())
+    │   │    └ <Command main>
+    │   └ <built-in function exit>
+    └ <module 'sys' (built-in)>
+  File "/usr/local/lib/python3.11/site-packages/click/core.py", line 1569, in __call__
+    return self.main(*args, **kwargs)
+           │    │     │       └ {}
+           │    │     └ ()
+           │    └ <function Command.main at 0x78bf7adf6ac0>
+           └ <Command main>
+  File "/usr/local/lib/python3.11/site-packages/click/core.py", line 1490, in main
+    rv = self.invoke(ctx)
+         │    │      └ <click.core.Context object at 0x78bf7bca0310>
+         │    └ <function Command.invoke at 0x78bf7adf67a0>
+         └ <Command main>
+  File "/usr/local/lib/python3.11/site-packages/click/core.py", line 1353, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+           │   │      │    │           │   └ {'host': '0.0.0.0', 'port': 8000, 'app': 'main:app', 'uds': None, 'fd': None, 'reload': False, 'reload_dirs': (), 'reload_inc...
+           │   │      │    │           └ <click.core.Context object at 0x78bf7bca0310>
+           │   │      │    └ <function main at 0x78bf7a9be660>
+           │   │      └ <Command main>
+           │   └ <function Context.invoke at 0x78bf7adf59e0>
+           └ <click.core.Context object at 0x78bf7bca0310>
+  File "/usr/local/lib/python3.11/site-packages/click/core.py", line 907, in invoke
+    return callback(*args, **kwargs)
+           │         │       └ {'host': '0.0.0.0', 'port': 8000, 'app': 'main:app', 'uds': None, 'fd': None, 'reload': False, 'reload_dirs': (), 'reload_inc...
+           │         └ ()
+           └ <function main at 0x78bf7a9be660>
+  File "/usr/local/lib/python3.11/site-packages/uvicorn/main.py", line 410, in main
+    run(
+    └ <function run at 0x78bf7ac393a0>
+  File "/usr/local/lib/python3.11/site-packages/uvicorn/main.py", line 577, in run
+    server.run()
+    │      └ <function Server.run at 0x78bf7ac7a980>
+    └ <uvicorn.server.Server object at 0x78bf7ac3d990>
+  File "/usr/local/lib/python3.11/site-packages/uvicorn/server.py", line 65, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           │       │   │    │             └ None
+           │       │   │    └ <function Server.serve at 0x78bf7ac7aa20>
+           │       │   └ <uvicorn.server.Server object at 0x78bf7ac3d990>
+           │       └ <function run at 0x78bf7ba0b560>
+           └ <module 'asyncio' from '/usr/local/lib/python3.11/asyncio/__init__.py'>
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           │      │   └ <coroutine object Server.serve at 0x78bf7a9b4b80>
+           │      └ <function Runner.run at 0x78bf7af3fe20>
+           └ <asyncio.runners.Runner object at 0x78bf7a9f7790>
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           │    │     │                  └ <Task pending name='Task-1' coro=<Server.serve() running at /usr/local/lib/python3.11/site-packages/uvicorn/server.py:69> wai...
+           │    │     └ <cyfunction Loop.run_until_complete at 0x78bf7a9a7040>
+           │    └ <uvloop.Loop running=True closed=False debug=False>
+           └ <asyncio.runners.Runner object at 0x78bf7a9f7790>
+  File "/usr/local/lib/python3.11/site-packages/uvicorn/protocols/http/httptools_impl.py", line 399, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+                   └ <uvicorn.middleware.proxy_headers.ProxyHeadersMiddleware object at 0x78bf798f8710>
+  File "/usr/local/lib/python3.11/site-packages/uvicorn/middleware/proxy_headers.py", line 70, in __call__
+    return await self.app(scope, receive, send)
+                 │    │   │      │        └ <bound method RequestResponseCycle.send of <uvicorn.protocols.http.httptools_impl.RequestResponseCycle object at 0x78bf77b42c...
+                 │    │   │      └ <bound method RequestResponseCycle.receive of <uvicorn.protocols.http.httptools_impl.RequestResponseCycle object at 0x78bf77b...
+                 │    │   └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.4'}, 'http_version': '1.1', 'server': ('172.21.0.4', 8000), 'c...
+                 │    └ <fastapi.applications.FastAPI object at 0x78bf79d67ad0>
+                 └ <uvicorn.middleware.proxy_headers.ProxyHeadersMiddleware object at 0x78bf798f8710>
+  File "/usr/local/lib/python3.11/site-packages/fastapi/applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+                           │      │        └ <bound method RequestResponseCycle.send of <uvicorn.protocols.http.httptools_impl.RequestResponseCycle object at 0x78bf77b42c...
+                           │      └ <bound method RequestResponseCycle.receive of <uvicorn.protocols.http.httptools_impl.RequestResponseCycle object at 0x78bf77b...
+                           └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.4'}, 'http_version': '1.1', 'server': ('172.21.0.4', 8000), 'c...
+  File "/usr/local/lib/python3.11/site-packages/starlette/applications.py", line 123, in __call__
+    await self.middleware_stack(scope, receive, send)
+          │    │                │      │        └ <bound method RequestResponseCycle.send of <uvicorn.protocols.http.httptools_impl.RequestResponseCycle object at 0x78bf77b42c...
+          │    │                │      └ <bound method RequestResponseCycle.receive of <uvicorn.protocols.http.httptools_impl.RequestResponseCycle object at 0x78bf77b...
+          │    │                └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.4'}, 'http_version': '1.1', 'server': ('172.21.0.4', 8000), 'c...
+          │    └ <starlette.middleware.errors.ServerErrorMiddleware object at 0x78bf77b37450>
+          └ <fastapi.applications.FastAPI object at 0x78bf79d67ad0>
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+          │    │   │      │        └ <function ServerErrorMiddleware.__call__.<locals>._send at 0x78bf77b2c220>
+          │    │   │      └ <bound method RequestResponseCycle.receive of <uvicorn.protocols.http.httptools_impl.RequestResponseCycle object at 0x78bf77b...
+          │    │   └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.4'}, 'http_version': '1.1', 'server': ('172.21.0.4', 8000), 'c...
+          │    └ <middleware.logging_middleware.LoggingMiddleware object at 0x78bf77b373d0>
+          └ <starlette.middleware.errors.ServerErrorMiddleware object at 0x78bf77b37450>
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 191, in __call__
+    response = await self.dispatch_func(request, call_next)
+                     │    │             │        └ <function BaseHTTPMiddleware.__call__.<locals>.call_next at 0x78bf77ffb380>
+                     │    │             └ <starlette.middleware.base._CachedRequest object at 0x78bf77b25090>
+                     │    └ <bound method LoggingMiddleware.dispatch of <middleware.logging_middleware.LoggingMiddleware object at 0x78bf77b373d0>>
+                     └ <middleware.logging_middleware.LoggingMiddleware object at 0x78bf77b373d0>
+
+> File "/app/middleware/logging_middleware.py", line 17, in dispatch
+    response = await call_next(request)
+                     │         └ <starlette.middleware.base._CachedRequest object at 0x78bf77b25090>
+                     └ <function BaseHTTPMiddleware.__call__.<locals>.call_next at 0x78bf77ffb380>
+
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 165, in call_next
+    raise app_exc
+          └ AttributeError("'TaskCreate' object has no attribute 'user_id'")
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 151, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+          │    │   │      │                      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.send_no_error at 0x78bf77b97600>
+          │    │   │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x78bf77b2d3a0>
+          │    │   └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.4'}, 'http_version': '1.1', 'server': ('172.21.0.4', 8000), 'c...
+          │    └ <starlette.middleware.exceptions.ExceptionMiddleware object at 0x78bf77b37410>
+          └ <middleware.logging_middleware.LoggingMiddleware object at 0x78bf77b373d0>
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 65, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+          │                            │    │    │     │      │        └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.send_no_error at 0x78bf77b97600>
+          │                            │    │    │     │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x78bf77b2d3a0>
+          │                            │    │    │     └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.4'}, 'http_version': '1.1', 'server': ('172.21.0.4', 8000), 'c...
+          │                            │    │    └ <starlette.requests.Request object at 0x78bf77f5bc90>
+          │                            │    └ <fastapi.routing.APIRouter object at 0x78bf77f80910>
+          │                            └ <starlette.middleware.exceptions.ExceptionMiddleware object at 0x78bf77b37410>
+          └ <function wrap_app_handling_exceptions at 0x78bf798abce0>
+  File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 64, in wrapped_app
+    raise exc
+  File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    await app(scope, receive, sender)
+          │   │      │        └ <function wrap_app_handling_exceptions.<locals>.wrapped_app.<locals>.sender at 0x78bf77b972e0>
+          │   │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x78bf77b2d3a0>
+          │   └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.4'}, 'http_version': '1.1', 'server': ('172.21.0.4', 8000), 'c...
+          └ <fastapi.routing.APIRouter object at 0x78bf77f80910>
+  File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 756, in __call__
+    await self.middleware_stack(scope, receive, send)
+          │    │                │      │        └ <function wrap_app_handling_exceptions.<locals>.wrapped_app.<locals>.sender at 0x78bf77b972e0>
+          │    │                │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x78bf77b2d3a0>
+          │    │                └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.4'}, 'http_version': '1.1', 'server': ('172.21.0.4', 8000), 'c...
+          │    └ <bound method Router.app of <fastapi.routing.APIRouter object at 0x78bf77f80910>>
+          └ <fastapi.routing.APIRouter object at 0x78bf77f80910>
+  File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 776, in app
+    await route.handle(scope, receive, send)
+          │     │      │      │        └ <function wrap_app_handling_exceptions.<locals>.wrapped_app.<locals>.sender at 0x78bf77b972e0>
+          │     │      │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x78bf77b2d3a0>
+          │     │      └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.4'}, 'http_version': '1.1', 'server': ('172.21.0.4', 8000), 'c...
+          │     └ <function Route.handle at 0x78bf798b13a0>
+          └ APIRoute(path='/tasks', name='create_task', methods=['POST'])
+  File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 297, in handle
+    await self.app(scope, receive, send)
+          │    │   │      │        └ <function wrap_app_handling_exceptions.<locals>.wrapped_app.<locals>.sender at 0x78bf77b972e0>
+          │    │   │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x78bf77b2d3a0>
+          │    │   └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.4'}, 'http_version': '1.1', 'server': ('172.21.0.4', 8000), 'c...
+          │    └ <function request_response.<locals>.app at 0x78bf77ffaf20>
+          └ APIRoute(path='/tasks', name='create_task', methods=['POST'])
+  File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 77, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+          │                            │    │        │      │        └ <function wrap_app_handling_exceptions.<locals>.wrapped_app.<locals>.sender at 0x78bf77b972e0>
+          │                            │    │        │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x78bf77b2d3a0>
+          │                            │    │        └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.4'}, 'http_version': '1.1', 'server': ('172.21.0.4', 8000), 'c...
+          │                            │    └ <starlette.requests.Request object at 0x78bf77b8ef90>
+          │                            └ <function request_response.<locals>.app.<locals>.app at 0x78bf77b97240>
+          └ <function wrap_app_handling_exceptions at 0x78bf798abce0>
+  File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 64, in wrapped_app
+    raise exc
+  File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    await app(scope, receive, sender)
+          │   │      │        └ <function wrap_app_handling_exceptions.<locals>.wrapped_app.<locals>.sender at 0x78bf77b97100>
+          │   │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x78bf77b2d3a0>
+          │   └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.4'}, 'http_version': '1.1', 'server': ('172.21.0.4', 8000), 'c...
+          └ <function request_response.<locals>.app.<locals>.app at 0x78bf77b97240>
+  File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 72, in app
+    response = await func(request)
+                     │    └ <starlette.requests.Request object at 0x78bf77b8ef90>
+                     └ <function get_request_handler.<locals>.app at 0x78bf77ffafc0>
+  File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 278, in app
+    raw_response = await run_endpoint_function(
+                         └ <function run_endpoint_function at 0x78bf798b0ea0>
+  File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 193, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+                 │                 │         │       └ {'db': <sqlalchemy.orm.session.Session object at 0x78bf77b8ff10>, 'task_data': TaskCreate(title='Купить молоко', description=...
+                 │                 │         └ <function create_task at 0x78bf77ff9620>
+                 │                 └ <fastapi.dependencies.models.Dependant object at 0x78bf77b18dd0>
+                 └ <function run_in_threadpool at 0x78bf79e68220>
+  File "/usr/local/lib/python3.11/site-packages/starlette/concurrency.py", line 42, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func, *args)
+                 │     │         │        │      └ ()
+                 │     │         │        └ functools.partial(<function create_task at 0x78bf77ff9620>, db=<sqlalchemy.orm.session.Session object at 0x78bf77b8ff10>, tas...
+                 │     │         └ <function run_sync at 0x78bf7ab51e40>
+                 │     └ <module 'anyio.to_thread' from '/usr/local/lib/python3.11/site-packages/anyio/to_thread.py'>
+                 └ <module 'anyio' from '/usr/local/lib/python3.11/site-packages/anyio/__init__.py'>
+  File "/usr/local/lib/python3.11/site-packages/anyio/to_thread.py", line 65, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+                 └ <function get_async_backend at 0x78bf7acceca0>
+  File "/usr/local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 2641, in run_sync_in_worker_thread
+    return await future
+                 └ <Future finished exception=AttributeError("'TaskCreate' object has no attribute 'user_id'")>
+  File "/usr/local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 1033, in run
+    result = context.run(func, *args)
+
+  File "/app/main.py", line 22, in create_task
+    user_id=task_data.user_id  # Логическая связь с пользователем из auth_service
+            └ TaskCreate(title='Купить молоко', description='Срочно')
+
+  File "/usr/local/lib/python3.11/site-packages/pydantic/main.py", line 811, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+
+AttributeError: 'TaskCreate' object has no attribute 'user_id'
+2026-07-29 17:41:41 | INFO     | Запрос: GET / | IP: 172.21.0.1
+2026-07-29 17:41:41 | WARNING  | Ответ: GET / | Статус: 404 | Время: 6.03ms
+2026-07-29 18:19:08 | INFO     | Запрос: POST /tasks | IP: 172.21.0.1
+2026-07-29 18:19:08 | INFO     | 📋 Создана новая задача: ID #1 для пользователя ID #77
+2026-07-29 18:19:08 | SUCCESS  | Ответ: POST /tasks | Статус: 201 | Время: 178.43ms
+2026-07-29 18:38:21 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.2', 5672))
+2026-07-29 18:38:26 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.2', 5672))
+2026-07-29 18:38:31 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.2', 5672))
+2026-07-29 18:38:36 | INFO     | 🚀 Воркер RabbitMQ успешно запущен и слушает обменник 'user_events'...
+2026-07-29 18:42:31 | INFO     | Запрос: POST /tasks | IP: 172.20.0.1
+2026-07-29 18:42:31 | INFO     | 📋 Создана новая задача: ID #2 для пользователя ID #77
+2026-07-29 18:42:31 | SUCCESS  | Ответ: POST /tasks | Статус: 201 | Время: 23.66ms
+2026-07-29 18:51:13 | INFO     | 📥 [RABBITMQ] Получено событие удаления пользователя ID #2. Начинаю очистку задач...
+2026-07-29 18:51:13 | INFO     | 🗑️ [RABBITMQ SUCCESS] Успешно удалено задач: 0 для пользователя ID #2
+2026-07-30 08:04:59 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.6', 5672))
+2026-07-30 08:05:04 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.6', 5672))
+2026-07-30 08:05:09 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.6', 5672))
+2026-07-30 08:05:14 | INFO     | 🚀 Воркер RabbitMQ успешно запущен и слушает обменник 'user_events'...
+2026-07-30 08:08:45 | INFO     | Запрос: GET / | IP: 172.20.0.1
+2026-07-30 08:08:45 | WARNING  | Ответ: GET / | Статус: 404 | Время: 3.78ms
+2026-07-30 14:55:37 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.4', 5672))
+2026-07-30 14:55:42 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.4', 5672))
+2026-07-30 14:55:47 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.4', 5672))
+2026-07-30 14:55:52 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.4', 5672))
+2026-07-30 14:55:57 | INFO     | 🚀 Воркер RabbitMQ успешно запущен и слушает обменник 'user_events'...
+2026-07-30 14:56:54 | INFO     | Запрос: GET / | IP: 172.20.0.1
+2026-07-30 14:56:54 | WARNING  | Ответ: GET / | Статус: 404 | Время: 4.55ms
+2026-07-31 06:58:44 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.6', 5672))
+2026-07-31 06:58:49 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.6', 5672))
+2026-07-31 06:58:54 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.6', 5672))
+2026-07-31 06:58:59 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.6', 5672))
+2026-07-31 06:59:04 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.6', 5672))
+2026-07-31 06:59:09 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.6', 5672))
+2026-07-31 06:59:14 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.6', 5672))
+2026-07-31 06:59:19 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.6', 5672))
+2026-07-31 06:59:24 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.6', 5672))
+2026-07-31 06:59:29 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.6', 5672))
+2026-07-31 06:59:34 | INFO     | 🚀 Воркер RabbitMQ успешно запущен и слушает обменник 'user_events'...
+2026-07-31 07:04:14 | INFO     | Запрос: GET / | IP: 172.20.0.1
+2026-07-31 07:04:14 | WARNING  | Ответ: GET / | Статус: 404 | Время: 154.82ms
+2026-08-04 09:29:25 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.6', 5672))
+2026-08-04 09:29:30 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.6', 5672))
+2026-08-04 09:29:35 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.6', 5672))
+2026-08-04 09:29:40 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.6', 5672))
+2026-08-04 09:29:45 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.6', 5672))
+2026-08-04 09:29:50 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.6', 5672))
+2026-08-04 09:29:55 | ERROR    | 🔌 [RABBITMQ] Ошибка подключения воркера, перезапуск через 5 секунд... ([Errno 111] Connect call failed ('172.20.0.6', 5672))
+2026-08-04 09:30:00 | INFO     | 🚀 Воркер RabbitMQ успешно запущен и слушает обменник 'user_events'...
+2026-08-04 10:08:23 | INFO     | 🚀 Воркер RabbitMQ успешно запущен и слушает обменник 'user_events'...
+2026-08-04 10:25:01 | INFO     | Запрос: POST /tasks | IP: 172.20.0.1
+2026-08-04 10:25:01 | WARNING  | Ответ: POST /tasks | Статус: 422 | Время: 77.73ms
+2026-08-04 10:28:17 | INFO     | Запрос: POST /tasks | IP: 172.20.0.1
+2026-08-04 10:28:17 | INFO     | 📋 Создана новая задача: ID #3 для пользователя ID #1
+2026-08-04 10:28:18 | SUCCESS  | Ответ: POST /tasks | Статус: 201 | Время: 463.75ms
+2026-08-04 13:05:59 | INFO     | Запрос: GET / | IP: 172.20.0.1
+2026-08-04 13:05:59 | WARNING  | Ответ: GET / | Статус: 404 | Время: 64.48ms
+2026-08-04 15:44:50 | INFO     | Запрос: POST /tasks | IP: 172.20.0.1
+2026-08-04 15:44:50 | INFO     | 📋 Создана новая задача: ID #4 для пользователя ID #1
+2026-08-04 15:44:50 | SUCCESS  | Ответ: POST /tasks | Статус: 201 | Время: 493.05ms
+2026-08-04 16:20:31 | INFO     | Запрос: POST /tasks | IP: 172.20.0.1
+2026-08-04 16:20:31 | INFO     | 📋 Создана новая задача: ID #5 для пользователя ID #1
+2026-08-04 16:20:31 | SUCCESS  | Ответ: POST /tasks | Статус: 201 | Время: 160.80ms
+2026-08-04 16:23:31 | INFO     | Запрос: POST /tasks | IP: 172.20.0.1
+2026-08-04 16:23:31 | INFO     | 📋 Создана новая задача: ID #6 для пользователя ID #1
+2026-08-04 16:23:31 | SUCCESS  | Ответ: POST /tasks | Статус: 201 | Время: 30.92ms
+2026-08-05 09:06:00 | INFO     | Запрос: GET / | IP: 172.20.0.1
+2026-08-05 09:06:00 | WARNING  | Ответ: GET / | Статус: 404 | Время: 78.45ms
+2026-08-05 11:23:08 | INFO     | Запрос: POST /tasks | IP: 172.18.0.1
+2026-08-05 11:23:08 | INFO     | 📋 Создана новая задача: ID #7 для пользователя ID #1
+2026-08-05 11:23:08 | ERROR    | ❌ Ошибка отправки в RabbitMQ: 'Settings' object has no attribute 'RABBITMQ_URL'
+2026-08-05 11:23:08 | SUCCESS  | Ответ: POST /tasks | Статус: 201 | Время: 236.04ms
+2026-08-05 11:27:31 | INFO     | Запрос: POST /tasks | IP: 172.18.0.1
+2026-08-05 11:27:31 | INFO     | 📋 Создана новая задача: ID #8 для пользователя ID #1
+2026-08-05 11:27:31 | ERROR    | ❌ Ошибка отправки в RabbitMQ: 'Settings' object has no attribute 'RABBITMQ_URL'
+2026-08-05 11:27:31 | SUCCESS  | Ответ: POST /tasks | Статус: 201 | Время: 16.67ms
+2026-08-05 11:38:16 | INFO     | Запрос: POST /tasks | IP: 172.18.0.1
+2026-08-05 11:38:16 | INFO     | 📋 Создана новая задача: ID #9 для пользователя ID #1
+2026-08-05 11:38:16 | ERROR    | ❌ Ошибка отправки в RabbitMQ: 'Settings' object has no attribute 'RABBITMQ_URL'
+2026-08-05 11:38:16 | SUCCESS  | Ответ: POST /tasks | Статус: 201 | Время: 59.23ms
+2026-08-05 11:39:47 | INFO     | Запрос: POST /tasks | IP: 172.18.0.1
+2026-08-05 11:39:47 | INFO     | 📋 Создана новая задача: ID #10 для пользователя ID #1
+2026-08-05 11:39:47 | ERROR    | ❌ Ошибка отправки в RabbitMQ: 'Settings' object has no attribute 'RABBITMQ_URL'
+2026-08-05 11:39:47 | SUCCESS  | Ответ: POST /tasks | Статус: 201 | Время: 18.87ms
+2026-08-05 11:46:31 | INFO     | Запрос: POST /tasks | IP: 172.18.0.1
+2026-08-05 11:46:31 | INFO     | 📋 Создана новая задача: ID #11 для пользователя ID #1
+2026-08-05 11:46:31 | INFO     | 🚀 Событие отправлено в RabbitMQ для задачи #11
+2026-08-05 11:46:31 | SUCCESS  | Ответ: POST /tasks | Статус: 201 | Время: 53.45ms

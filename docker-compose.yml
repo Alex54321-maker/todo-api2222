@@ -1,156 +1,93 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  # 1. База данных PostgreSQL для задач
-  db:
-    image: postgres:16
-    container_name: micro_postgres_db
+  postgres:
+    image: postgres:15-alpine
+    container_name: microservices_db
     restart: always
     environment:
-      - POSTGRES_USER=alex_user
-      - POSTGRES_PASSWORD=alex_secure_password
-      - POSTGRES_DB=micro_todo_db
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U alex_user -d micro_todo_db"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:
-      - micro_network
-
-  # Новая изолированная база данных для соцсети и лайков
-  social_db:
-    image: postgres:16
-    container_name: micro_social_db
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: micro_social_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_MULTIPLE_DATABASES: auth_db,tasks_db
     ports:
       - "5433:5432"
     volumes:
-      - social_postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d micro_social_db"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:          
-      - micro_network
+      - pg_data:/var/lib/postgresql/data
+      - ./init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh
+    networks:
+      - app_network
 
-  # Брокер сообщений RabbitMQ (Инфраструктура)
   rabbitmq:
     image: rabbitmq:3-management-alpine
-    container_name: rabbitmq_broker
+    container_name: microservices_rabbitmq
     restart: always
     ports:
-      - "5672:5672"   # Порт для обмена сообщениями AMQP
-      - "15672:15672" # Порт для веб-панели управления (Management UI)
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
+      - "5672:5672"
+      - "15672:15672"
     networks:
-      - micro_network
+      - app_network
 
-  # 2. Микросервис Авторизации (Auth-Service)
   auth_service:
-    build: ./auth_service
-    container_name: auth_microservice
-    restart: always
-    environment:
-      - DATABASE_URL=postgresql://alex_user:alex_secure_password@db:5432/micro_todo_db
-      - JWT_SECRET=super_secret_key_123
-      - PYTHONUNBUFFERED=1
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - micro_network
-
-  # 3. Микросервис Задач (Task-Service)
-  task_service:
-    build: ./task_service
-    container_name: task_microservice
+    build:
+      context: ./auth_service
+      dockerfile: Dockerfile
+    container_name: auth_service
     restart: always
     ports:
-      - "8001:8001"  # <- ДОБАВЬ ЭТУ СТРОЧКУ СЮДА 🎯
+      - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://alex_user:alex_secure_password@db:5432/micro_todo_db
-      - JWT_SECRET=super_secret_key_123
-      - PYTHONUNBUFFERED=1
+      - DATABASE_URL=postgresql://user:password@postgres:5432/auth_db
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
-    command: bash -c "sleep 25 && uvicorn main:app --host 0.0.0.0 --port 8001"
+      - JWT_SECRET=super_secret_key_12345
+    volumes:
+      - ./logs/auth:/app/logs
     depends_on:
-      - db
+      - postgres
       - rabbitmq
     networks:
-      - micro_network
+      - app_network
 
-  # 4. Микросервис Подписок и Лайков (Social-Service)
-  social_service:
-    build: ./social_service
-    container_name: social_microservice
+  task_service:
+    build:
+      context: ./task_service
+      dockerfile: Dockerfile
+    container_name: task_service
     restart: always
+    ports:
+      - "8001:8000"
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@social_db:5432/micro_social_db
+      - DATABASE_URL=postgresql://user:password@postgres:5432/tasks_db
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
-      - PYTHONUNBUFFERED=1
-    command: uvicorn main:app --host 0.0.0.0 --port 8003
+      - JWT_SECRET=super_secret_key_12345
     volumes:
-      - ./frontend/index.html:/home/user/todo-api/monolith_v2/static/index.html
+      - ./logs/tasks:/app/logs
     depends_on:
-      social_db:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_started
+      - postgres
+      - rabbitmq
     networks:
-      - micro_network
+      - app_network
 
-  # 5. Фоновый процесс для обработки очередей соцсети (НАШ ВОРКЕР) 🚀
-  social_worker:
-    build: ./social_service
-    container_name: social_worker_service
+  task_worker:
+    build:
+      context: ./task_service
+      dockerfile: Dockerfile
+    container_name: task_worker
     restart: always
     command: python worker.py
     environment:
-      # Передаем асинхронный драйвер asyncpg для SQLAlchemy
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@social_db:5432/micro_social_db
+      - DATABASE_URL=postgresql://user:password@postgres:5432/tasks_db
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
-      - PYTHONUNBUFFERED=1
-    depends_on:
-      social_db:
-        condition: service_healthy  # Ждем, пока база соцсети полностью запустится
-      rabbitmq:
-        condition: service_started
-    networks:
-      - micro_network
-
-  # 6. Шлюз Маршрутизации (Gateway Nginx)
-  gateway:
-    image: nginx:alpine
-    container_name: nginx_gateway
-    restart: always
-    ports:
-      - "8000:80" 
     volumes:
-      - ./gateway/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./logs/tasks:/app/logs
     depends_on:
-      - auth_service
-      - task_service
-      - social_service 
+      - postgres
+      - rabbitmq
     networks:
-      - micro_network
+      - app_network
 
-# Глобальные тома вынесены строго в корень (без отступов слева)
 volumes:
-  rabbitmq_data:
-  social_postgres_data: 
+  pg_data:
 
-# Глобальные сети
 networks:
-  micro_network:
+  app_network:
     driver: bridge
