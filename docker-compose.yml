@@ -6,8 +6,8 @@ services:
     container_name: microservices_db
     restart: always
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_MULTIPLE_DATABASES: auth_db,tasks_db
     ports:
       - "5433:5432"
@@ -21,6 +21,9 @@ services:
     image: rabbitmq:3-management-alpine
     container_name: microservices_rabbitmq
     restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -36,9 +39,9 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://user:password@postgres:5432/auth_db
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
-      - JWT_SECRET=super_secret_key_12345
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/auth_db
+      - RABBITMQ_URL=amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
+      - JWT_SECRET=${SECRET_KEY}
     volumes:
       - ./logs/auth:/app/logs
     depends_on:
@@ -56,9 +59,9 @@ services:
     ports:
       - "8001:8000"
     environment:
-      - DATABASE_URL=postgresql://user:password@postgres:5432/tasks_db
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
-      - JWT_SECRET=super_secret_key_12345
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/tasks_db
+      - RABBITMQ_URL=amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
+      - JWT_SECRET=${SECRET_KEY}
     volumes:
       - ./logs/tasks:/app/logs
     depends_on:
@@ -75,13 +78,25 @@ services:
     restart: always
     command: python worker.py
     environment:
-      - DATABASE_URL=postgresql://user:password@postgres:5432/tasks_db
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/tasks_db
+      - RABBITMQ_URL=amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
     volumes:
       - ./logs/tasks:/app/logs
     depends_on:
       - postgres
       - rabbitmq
+    networks:
+      - app_network
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: task_mailpit
+    restart: always
+    ports:
+      - "1025:1025"
+      - "8025:8025"
     networks:
       - app_network
 
