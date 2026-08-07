@@ -1,3 +1,7 @@
+import threading
+import sys
+import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import engine, Base, get_db
@@ -7,7 +11,34 @@ from middleware.logging_middleware import LoggingMiddleware
 from core.logger import logger
 from rabbitmq import send_task_created_event
 
-app = FastAPI(title="Task Microservice", version="1.0.0")
+# Автоматически добавляем корень проекта в пути, чтобы импортировать воркер
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+try:
+    from worker import main as start_worker
+except ImportError:
+    # На случай, если структура папок на проде будет изолирована внутри контейнера
+    try:
+        from task_service.worker import main as start_worker
+    except ImportError:
+        start_worker = None
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # --- КОД ПРИ СТАРТЕ ПРИЛОЖЕНИЯ ---
+    if start_worker:
+        logger.info("🧵 Запуск фонового воркера RabbitMQ в параллельном потоке...")
+        worker_thread = threading.Thread(target=start_worker, daemon=True)
+        worker_thread.start()
+        logger.info("✅ Поток воркера успешно инициализирован.")
+    else:
+        logger.error("❌ Не удалось найти модуль worker.py для запуска фонового процесса!")
+    
+    yield  # Здесь приложение работает
+    
+    # --- КОД ПРИ ОСТАНОВКЕ ПРИЛОЖЕНИЯ ---
+    logger.info("🛑 Накатываем завершение работы микросервиса задач...")
+
+app = FastAPI(title="Task Microservice", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(LoggingMiddleware)
 
