@@ -1,8 +1,8 @@
 import os
 from loguru import logger
 
-# Указываем абсолютный путь к папке логов внутри контейнера
-LOG_DIR = "/app/logs"
+# Используем /tmp/logs, так как у Render есть права на запись в папку /tmp
+LOG_DIR = "/tmp/logs"
 os.makedirs(LOG_DIR, exist_ok=True)
 
 logger.add(
