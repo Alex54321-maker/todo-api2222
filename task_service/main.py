@@ -10,6 +10,9 @@ from middleware.logging_middleware import LoggingMiddleware
 from core.logger import logger
 from rabbitmq import send_task_created_event
 
+# Импортируем нашу новую зависимость проверки JWT-токенов
+from auth import get_current_user_id
+
 # Автоматически добавляем корень проекта в пути поиска модулей
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -34,23 +37,30 @@ app.add_middleware(LoggingMiddleware)
 Base.metadata.create_all(bind=engine)
 
 @app.post("/tasks", response_model=schemas.TaskResponse, status_code=status.HTTP_201_CREATED)
-def create_task(task_data: schemas.TaskCreate, db: Session = Depends(get_db)):
-    """Эндпоинт для создания новой задачи и отправки события в RabbitMQ."""
+def create_task(
+    task_data: schemas.TaskCreate, 
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id)  # <-- ЗАЩИТА ЭНДПОИНТА
+):
+    """
+    Эндпоинт доступен только авторизованным пользователям с валидным JWT.
+    ID пользователя извлекается напрямую из защищенной цифровой подписи токена.
+    """
     new_task = models.Task(
         title=task_data.title,
         description=task_data.description,
-        user_id=task_data.user_id,
+        user_id=current_user_id,  # Гарантированно берем защищенный ID из токена
         is_completed=False
     )
     db.add(new_task)
     db.commit()
     db.refresh(new_task)
     
-    logger.info(f"📋 В БД сохранена задача: ID #{new_task.id} для пользователя ID #{new_task.user_id}")
+    logger.info(f"📋 В БД сохранена задача: ID #{new_task.id} для авторизованного пользователя ID #{current_user_id}")
     
     # Отправляем короткое одиночное событие в CloudAMQP
     try:
-        send_task_created_event(task_id=new_task.id, user_id=new_task.user_id)
+        send_task_created_event(task_id=new_task.id, user_id=current_user_id)
         logger.info(f"🚀 Событие успешно опубликовано в RabbitMQ для задачи #{new_task.id}")
     except Exception as e:
         logger.error(f"❌ Ошибка отправки события в RabbitMQ: {e}")
