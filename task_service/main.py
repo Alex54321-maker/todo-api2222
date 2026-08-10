@@ -13,24 +13,38 @@ from rabbitmq import send_task_created_event
 
 # Автоматически добавляем корень проекта в пути, чтобы импортировать воркер
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+start_worker = None
+print("🔍 [DEBUG] Пробуем импортировать worker.py...")
+
 try:
     from worker import main as start_worker
-except ImportError:
-    # На случай, если структура папок на проде будет изолирована внутри контейнера
+    print("✅ [DEBUG] Воркер успешно импортирован из корня!")
+except Exception as e:
+    print(f"⚠️ [DEBUG] Ошибка первого импорта: {e}")
     try:
         from task_service.worker import main as start_worker
-    except ImportError:
-        start_worker = None
+        print("✅ [DEBUG] Воркер успешно импортирован из task_service.worker!")
+    except Exception as e2:
+        print(f"❌ [DEBUG] Ошибка критического импорта воркера: {e2}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # --- КОД ПРИ СТАРТЕ ПРИЛОЖЕНИЯ ---
+    print(f"🔍 [DEBUG] Статус start_worker перед запуском: {start_worker}")
+    
     if start_worker:
+        print("🧵 [DEBUG] Запуск фонового воркера RabbitMQ в параллельном потоке...")
+        # Логируем также в наш лог-файл для истории
         logger.info("🧵 Запуск фонового воркера RabbitMQ в параллельном потоке...")
+        
         worker_thread = threading.Thread(target=start_worker, daemon=True)
         worker_thread.start()
+        
+        print("✅ [DEBUG] Поток воркера запущен.")
         logger.info("✅ Поток воркера успешно инициализирован.")
     else:
+        print("❌ [DEBUG] КРИТИЧЕСКАЯ ОШИБКА: start_worker равен None, поток не запущен!")
         logger.error("❌ Не удалось найти модуль worker.py для запуска фонового процесса!")
     
     yield  # Здесь приложение работает
