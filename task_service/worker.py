@@ -5,6 +5,7 @@ import smtplib
 import os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import ssl  # Добавь этот импорт в самый верх файла к остальным импортам
 
 # Ультра-надежный импорт настроек конфигурации
 try:
@@ -75,10 +76,11 @@ def process_task(ch, method, properties, body):
         # Возвращаем сообщение в очередь, если произошел системный сбой
         ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
 
+
+
 def main():
     print("🚀 [WORKER-DEBUG] Функция main() воркера успешно вызвана в потоке!")
     
-    # Пытаемся получить URL из всех возможных источников
     RABBITMQ_URL = None
     if settings and hasattr(settings, "RABBITMQ_URL"):
         RABBITMQ_URL = settings.RABBITMQ_URL
@@ -91,6 +93,15 @@ def main():
     if RABBITMQ_URL:
         print(" [*] Воркер: Инициализация подключения через URL...")
         parameters = pika.URLParameters(RABBITMQ_URL)
+        
+        # --- ФИКС ДЛЯ ОБЛАЧНОГО SSL (amqps://) ---
+        if RABBITMQ_URL.startswith("amqps"):
+            print("🔒 [WORKER-DEBUG] Обнаружен защищенный протокол amqps. Включаем SSL-контекст...")
+            context = ssl.create_default_context()
+            # Отключаем строгую проверку сертификатов для совместимости с бесплатными планами CloudAMQP
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+            parameters.ssl_options = pika.SSLOptions(context)
     else:
         print(f" [*] Воркер: Локальный запуск. Подключение к хосту {RABBITMQ_HOST}...")
         credentials = pika.PlainCredentials('guest', 'guest')
