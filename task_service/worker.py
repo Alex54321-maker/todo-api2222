@@ -1,101 +1,123 @@
-import os
 import time
 import json
 import pika
 import smtplib
-from email.mime.multipart import MIMEMultipart
+import os
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
-def send_email_notification(task_data: dict):
-    """Формирует и отправляет MIME-уведомление через SMTP (Mailpit)."""
-    # Читаем настройки SMTP из окружения (для Docker хост 'mailpit', порт 1025)
-    smtp_host = os.getenv("SMTP_HOST", "mailpit")
-    smtp_port = int(os.getenv("SMTP_PORT", 1025))
-    
-    # Извлекаем ID задачи и email (если они есть в теле сообщения)
-    task_id = task_data.get("task_id", "Неизвестный ID")
+# Ультра-надежный импорт настроек конфигурации
+try:
+    from task_service.config import settings
+    print("✅ [WORKER-DEBUG] Настройки settings успешно импортированы из task_service.config")
+except ImportError:
+    try:
+        from config import settings
+        print("✅ [WORKER-DEBUG] Настройки settings успешно импортированы из config")
+    except ImportError as e:
+        settings = None
+        print(f"⚠️ [WORKER-DEBUG] Не удалось импортировать settings: {e}")
 
-    title = task_data.get("title", "Без названия")
-    recipient_email = task_data.get("user_email", "test@example.com") # Подставьте ваш ключ email
+# Настройки SMTP для работы внутри Docker-сети с контейнером test_mail (Mailpit)
+SMTP_SERVER = os.getenv("SMTP_SERVER", "test_mail")
+SMTP_PORT = int(os.getenv("SMTP_PORT", 1025))
+SMTP_USER = os.getenv("SMTP_USER", "wormsbecher.alexander@gmail.com")
 
-    # Создаем MIME-сообщение
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"Уведомление: Задача #{task_id} запущена в обработку"
-    msg["From"] = "no-reply@taskservice.local"
-    msg["To"] = recipient_email
+# Резервный хост RabbitMQ для локального Docker
+RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "microservices_rabbitmq")
 
-    # HTML-шаблон письма
-    html_content = f"""
-    <html>
-      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-        <h2 style="color: #4CAF50;">Успешный запуск задачи!</h2>
-        <p>Приветствуем,</p>
-        <p>Ваша задача <strong>#{task_id} ("{title}")</strong> была успешно добавлена в очередь и сейчас обрабатывается воркером.</p>
-        <hr style="border: 0; border-top: 1px solid #eee;" />
-        <small style="color: #777;">Это автоматическое уведомление среды разработки. Пожалуйста, не отвечайте на него.</small>
-      </body>
-    </html>
-    """
-    msg.attach(MIMEText(html_content, "html"))
+def send_email_notification(task_id, user_id, status):
+    """Функция для отправки Email через SMTP Mailpit внутри Docker или внешние SMTP."""
+    msg = MIMEMultipart()
+    msg['From'] = SMTP_USER
+    msg['To'] = SMTP_USER
+    msg['Subject'] = f"🔔 Изменен статус задачи #{task_id}"
+
+    body = (
+        f"Привет!\n\n"
+        f"В системе произошло событие с задачей:\n"
+        f"- ID задачи: {task_id}\n"
+        f"- ID Пользователя: {user_id}\n"
+        f"- Статус: {status}\n\n"
+        f"Удачи в выполнении!"
+    )
+    msg.attach(MIMEText(body, 'plain', 'utf-8'))
 
     try:
-        with smtplib.SMTP(smtp_host, smtp_port) as server:
-            server.sendmail(msg["From"], msg["To"], msg.as_string())
-        print(f" [✓] MIME-письмо по задаче #{task_id} отправлено на {recipient_email}", flush=True)
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.sendmail(SMTP_USER, SMTP_USER, msg.as_string())
+        print(f" [✉] Тестовое письмо по задаче #{task_id} успешно отправлено!")
+        return True
     except Exception as e:
-        print(f" [!] Ошибка отправки SMTP-письма для задачи #{task_id}: {e}", flush=True)
+        print(f" [!] Ошибка отправки Email: {e}")
+        return False
 
 def process_task(ch, method, properties, body):
-    """Функция обратного вызова для обработки сообщений из очереди."""
+    """Обработчик сообщений из RabbitMQ. Синхронизирован с форматом rabbitmq.py."""
     try:
-        # Десериализация JSON
         data = json.loads(body.decode('utf-8'))
-        print(f" [x] Получено событие создания задачи: {data}", flush=True)
+        print(f" [x] Получено событие из RabbitMQ: {data}")
         
-        # Имитация тяжелой работы
-        print(" [... ] Начинаем обработку и отправку email...", flush=True)
+        # Извлекаем ключи, которые отправляет rabbitmq.py
+        task_id = data.get("task_id", "N/A")
+        user_id = data.get("user_id", "N/A")
+        status = data.get("status", "unknown")
         
-        # Отправляем реальное MIME-уведомление в Mailpit
-        send_email_notification(data)
+        print(f" [... ] Начинаем обработку уведомления для задачи #{task_id}...")
+        send_email_notification(task_id, user_id, status)
         
-        time.sleep(3)  # имитируем долгую операцию
-        
-        print(f" [✓] Задача успешно обработана!", flush=True)
-        
-        # Подтверждаем успешное получение и обработку сообщения
+        # Подтверждаем успешную обработку сообщения брокеру
         ch.basic_ack(delivery_tag=method.delivery_tag)
+        print(f" [✓] Событие по задаче #{task_id} успешно обработано и подтверждено!")
         
     except Exception as e:
-        print(f" [!] Ошибка при обработке сообщения: {e}", flush=True)
-        # В случае ошибки возвращаем сообщение в queue
+        print(f" [!] Ошибка при обработке сообщения в воркере: {e}")
+        # Возвращаем сообщение в очередь, если произошел системный сбой
         ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
 
 def main():
-    # Читаем URL из переменной окружения Docker, либо берем localhost для локальных тестов
-    rabbitmq_url = os.getenv('RABBITMQ_URL', 'amqp://guest:guest@localhost:5672/')
+    print("🚀 [WORKER-DEBUG] Функция main() воркера успешно вызвана в потоке!")
     
-    print(f" [*] Подключение к RabbitMQ по адресу: {rabbitmq_url}", flush=True)
+    # Пытаемся получить URL из всех возможных источников
+    RABBITMQ_URL = None
+    if settings and hasattr(settings, "RABBITMQ_URL"):
+        RABBITMQ_URL = settings.RABBITMQ_URL
     
-    # Подключаемся через URLParameters (точно так же, как в вашем rabbitmq.py)
-    parameters = pika.URLParameters(rabbitmq_url)
+    if not RABBITMQ_URL:
+        RABBITMQ_URL = os.getenv("RABBITMQ_URL")
+        
+    print(f"🔍 [WORKER-DEBUG] Итоговый RABBITMQ_URL для подключения: {RABBITMQ_URL}")
     
-    connection = pika.BlockingConnection(parameters)
-    channel = connection.channel()
+    if RABBITMQ_URL:
+        print(" [*] Воркер: Инициализация подключения через URL...")
+        parameters = pika.URLParameters(RABBITMQ_URL)
+    else:
+        print(f" [*] Воркер: Локальный запуск. Подключение к хосту {RABBITMQ_HOST}...")
+        credentials = pika.PlainCredentials('guest', 'guest')
+        parameters = pika.ConnectionParameters(host=RABBITMQ_HOST, port=5672, credentials=credentials)
     
-    # Объявляем ту же очередь, в которую main.py отправляет сообщения
-    channel.queue_declare(queue='task_created_queue', durable=True)
-    
-    # Распределяем нагрузку: воркер берет только 1 задачу за раз
-    channel.basic_qos(prefetch_count=1)
-    
-    # Регистрируем функцию-обработчик
-    channel.basic_consume(queue='task_created_queue', on_message_callback=process_task)
-    
-    print(' [*] Воркер успешно запущен и ожидает сообщений. Для выхода нажмите CTRL+C', flush=True)
-    channel.start_consuming()
+    while True:
+        try:
+            print("⏳ [WORKER-DEBUG] Пробуем открыть BlockingConnection...")
+            connection = pika.BlockingConnection(parameters)
+            channel = connection.channel()
+            
+            print("⏳ [WORKER-DEBUG] Соединение установлено. Создаем очередь task_created_queue...")
+            channel.queue_declare(queue='task_created_queue', durable=True)
+            
+            channel.basic_qos(prefetch_count=1)
+            channel.basic_consume(queue='task_created_queue', on_message_callback=process_task)
+            
+            print('🎯 [WORKER-DEBUG] ОЧЕРЕДЬ СОЗДАНА! Воркер успешно ожидает сообщений...')
+            channel.start_consuming()
+            
+        except pika.exceptions.AMQPConnectionError as e:
+            print(f"❌ [WORKER-DEBUG] КРИТИЧЕСКАЯ ОШИБКА ПОДКЛЮЧЕНИЯ: {e}")
+            print(" Повторная попытка через 5 секунд...")
+            time.sleep(5)
+        except Exception as e:
+            print(f"❌ [WORKER-DEBUG] Непредвиденная ошибка в цикле воркера: {e}")
+            time.sleep(5)
 
 if __name__ == '__main__':
-    try:
-        main()
-    except KeyboardInterrupt:
-        print(' [*] Воркер остановлен.', flush=True)
+    main()
