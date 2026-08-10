@@ -10,7 +10,7 @@ from middleware.logging_middleware import LoggingMiddleware
 from core.logger import logger
 from rabbitmq import send_task_created_event
 
-# Импортируем нашу новую зависимость проверки JWT-токенов
+# Импортируем зависимость проверки JWT-токенов
 from auth import get_current_user_id
 
 # Автоматически добавляем корень проекта в пути поиска модулей
@@ -40,16 +40,16 @@ Base.metadata.create_all(bind=engine)
 def create_task(
     task_data: schemas.TaskCreate, 
     db: Session = Depends(get_db),
-    current_user_id: int = Depends(get_current_user_id)  # <-- ЗАЩИТА ЭНДПОИНТА
+    current_user_id: int = Depends(get_current_user_id)
 ):
     """
-    Эндпоинт доступен только авторизованным пользователям с валидным JWT.
-    ID пользователя извлекается напрямую из защищенной цифровой подписи токена.
+    Эндпоинт создания задачи доступен только авторизованным пользователям с валидным JWT.
+    Если RabbitMQ недоступен, задача все равно сохранится в БД и вернется клиенту.
     """
     new_task = models.Task(
         title=task_data.title,
         description=task_data.description,
-        user_id=current_user_id,  # Гарантированно берем защищенный ID из токена
+        user_id=current_user_id,  # Реальный ID пользователя, извлеченный из JWT-токена
         is_completed=False
     )
     db.add(new_task)
@@ -58,13 +58,13 @@ def create_task(
     
     logger.info(f"📋 В БД сохранена задача: ID #{new_task.id} для авторизованного пользователя ID #{current_user_id}")
     
-    # Отправляем короткое одиночное событие в CloudAMQP
+    # БЕЗОПАСНАЯ ОТПРАВКА: Ошибка брокера RabbitMQ больше не ломает ответ клиенту
     try:
         send_task_created_event(task_id=new_task.id, user_id=current_user_id)
         logger.info(f"🚀 Событие успешно опубликовано в RabbitMQ для задачи #{new_task.id}")
     except Exception as e:
-        logger.error(f"❌ Ошибка отправки события в RabbitMQ: {e}")
-        # Не роняем HTTP-ответ, если упал брокер, чтобы пользователь получил свою задачу
+        logger.error(f"⚠️ [MESSAGING] Не удалось отправить событие в RabbitMQ: {e}")
+        logger.info("ℹ️ Задача успешно создана в БД, отправка события будет повторена позже.")
         
     return new_task
 
